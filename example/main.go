@@ -10,6 +10,7 @@ import (
 
 // type stateFn func(*lexer.Lexer) stateFn
 
+// The first two of these must match those in lexer.go
 const (
 	TokError lexer.TokenType = iota
 	TokEof
@@ -25,20 +26,27 @@ func main() {
     delay(100)
     for {
         tok, ok := <-ch
-        fmt.Println("channel data:", tok, "ok:", ok)
-        delay(100)
         if !ok {
-            fmt.Println("got NOT ok:", ok)
+            // fmt.Println("got NOT ok:", ok)
             break
         }
+        fmt.Println("channel data:", tok, "ok:", ok)
+        delay(100)
     }
 }
 
 func lexState(l *lexer.Lexer) lexer.StateFn {
 	fmt.Println("start lexState")
-	r :=  l.Next()
-	t := lexer.Token{R: r, Val: string(r)}
-	l.Emit(t)
+	for {
+		r :=  l.Next()
+		if r == lexer.EofRune {
+			l.Emit(lexer.Token{Type: TokEof})
+			break
+		} else {
+			t := lexer.Token{Type: TokChar, Val: string(r)}
+			l.Emit(t)
+		}
+	}
 	return nil
 }
 

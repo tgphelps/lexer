@@ -7,15 +7,15 @@ import (
 
 type TokenType int
 
-// const (
-	// itemError TokenType = iota
-	// itemEOF
-// )
+const (
+    TokError TokenType = iota
+    TokEof
+)
 
 type Token struct {
 	// typ TokenType
 	// val string
-	R rune
+	Type TokenType
 	Val string
 }
 
@@ -28,6 +28,19 @@ type Lexer struct {
 }
 
 const EofRune = -1
+
+func (t Token) String() string {
+	switch t.Type {
+	case TokEof:
+		return "EOF"
+	case TokError:
+		return t.Val
+	}
+	if len(t.Val) > 10 {
+		return fmt.Sprintf("%.10q...", t.Val)
+	}
+	return fmt.Sprintf("%q", t.Val)
+}
 
 func NewLexer(ch chan Token, src *bufio.Reader, start StateFn) *Lexer {
 	l := &Lexer{
