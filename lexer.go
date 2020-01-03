@@ -40,9 +40,20 @@ func newLexer(ch chan token, src *bufio.Reader) *lexer {
 
 func (l *lexer) run() {
 	fmt.Println("lexer running...")
-	r, _, _ := l.src.ReadRune()
-	fmt.Println("lexer read:", r)
-	l.tokenCh <- token{r: r, val: "char"}
+
+	for {
+		r, _, err := l.src.ReadRune()
+		if  err != nil {
+			// This happens at EOF
+			fmt.Println("error", err)
+			if err.Error() == "EOF" {
+				fmt.Println("got EOF")
+			}
+			break
+		}
+		fmt.Printf("lexer read: %v %q\n", r, r)
+		l.tokenCh <- token{r: r, val: string(r)}
+	}
 	close(l.tokenCh)
 }
 
@@ -54,9 +65,13 @@ func main() {
 
 	go l.run()
 	delay(100)
-	tok, ok := <-ch
-	fmt.Println("channel data:", tok, "ok:", ok)
-	delay(100)
-	tok, ok = <-ch
-	fmt.Println("channel data:", tok, "ok:", ok)
+	for {
+		tok, ok := <-ch
+		fmt.Println("channel data:", tok, "ok:", ok)
+		delay(100)
+		if !ok {
+			fmt.Println("got NOT ok:", ok)
+			break
+		}
+	}
 }
