@@ -1,44 +1,40 @@
-package main
+package lexer
 
 import (
 	"bufio"
 	"fmt"
-	"os"
-	"time"
 )
 
-type tokenType int
+type TokenType int
 
 const (
-	itemError tokenType = iota
+	itemError TokenType = iota
 	itemEOF
 )
 
-type token struct {
-	// typ tokenType
+type Token struct {
+	// typ TokenType
 	// val string
 	r rune
 	val string
 }
 
-type lexer struct {
-	tokenCh chan token
+type Lexer struct {
+	tokenCh chan Token
 	src     *bufio.Reader
 }
 
-func delay(n time.Duration) {
-	time.Sleep(n * time.Millisecond)
-}
+type StateFn func(*Lexer) StateFn
 
-func newLexer(ch chan token, src *bufio.Reader) *lexer {
-	l := &lexer{
+func NewLexer(ch chan Token, src *bufio.Reader) *Lexer {
+	l := &Lexer{
 		tokenCh: ch,
 		src: src,
 	}
 	return l
 }
 
-func (l *lexer) run() {
+func (l *Lexer) Run() {
 	fmt.Println("lexer running...")
 
 	for {
@@ -52,26 +48,8 @@ func (l *lexer) run() {
 			break
 		}
 		fmt.Printf("lexer read: %v %q\n", r, r)
-		l.tokenCh <- token{r: r, val: string(r)}
+		l.tokenCh <- Token{r: r, val: string(r)}
 	}
 	close(l.tokenCh)
 }
 
-func main() {
-	ch := make(chan token)
-	src := bufio.NewReader(os.Stdin)
-	l := newLexer(ch, src)
-	fmt.Println("lexer:", l)
-
-	go l.run()
-	delay(100)
-	for {
-		tok, ok := <-ch
-		fmt.Println("channel data:", tok, "ok:", ok)
-		delay(100)
-		if !ok {
-			fmt.Println("got NOT ok:", ok)
-			break
-		}
-	}
-}
