@@ -10,14 +10,16 @@ import (
 
 // type stateFn func(*lexer.Lexer) stateFn
 
-var mytoken lexer.TokenType = 1
+const (
+	TokError lexer.TokenType = iota
+	TokEof
+	TokChar
+)
 
 func main() {
-	fmt.Println("hello", mytoken)
     ch := make(chan lexer.Token)
     src := bufio.NewReader(os.Stdin)
-    l := lexer.NewLexer(ch, src)
-    fmt.Println("lexer:", l)
+    l := lexer.NewLexer(ch, src, lexState)
 
     go l.Run()
     delay(100)
@@ -30,6 +32,14 @@ func main() {
             break
         }
     }
+}
+
+func lexState(l *lexer.Lexer) lexer.StateFn {
+	fmt.Println("start lexState")
+	r :=  l.Next()
+	t := lexer.Token{R: r, Val: string(r)}
+	l.Emit(t)
+	return nil
 }
 
 func delay(d time.Duration) {
