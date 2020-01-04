@@ -20,6 +20,7 @@ const (
 	TokChar
 	TokAlphas
 	TokDigits
+	TokWhiteSpace
 )
 
 func main() {
@@ -53,6 +54,12 @@ func lexState(l *lexer.Lexer) lexer.StateFn {
 			if unicode.IsLetter(r) {
 				s := collect(l, unicode.IsLetter, r)
 				t = lexer.Token{Type: TokAlphas, Val: s}
+			} else if unicode.IsNumber(r) {
+				s := collect(l, unicode.IsNumber, r)
+				t = lexer.Token{Type: TokDigits, Val: s}
+			} else if unicode.IsSpace(r) {
+				s := collect(l, unicode.IsSpace, r)
+				t = lexer.Token{Type: TokWhiteSpace, Val: s}
 			} else {
 				t = lexer.Token{Type: TokChar, Val: string(r)}
 			}
