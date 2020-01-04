@@ -8,14 +8,13 @@ import (
 
 type TokenType int
 
+// Predefined Tokens that all callers must have
 const (
 	TokError TokenType = iota
 	TokEof
 )
 
 type Token struct {
-	// typ TokenType
-	// val string
 	Type TokenType
 	Val  string
 }
@@ -26,6 +25,7 @@ type Lexer struct {
 	tokenCh    chan Token
 	src        *bufio.Reader
 	startState StateFn
+	GotEof     bool
 }
 
 const EofRune = -1
@@ -48,6 +48,7 @@ func NewLexer(ch chan Token, src *bufio.Reader, start StateFn) *Lexer {
 		tokenCh:    ch,
 		src:        src,
 		startState: start,
+		GotEof:     false,
 	}
 	return l
 }
@@ -56,6 +57,7 @@ func (l *Lexer) Next() rune {
 	r, _, err := l.src.ReadRune()
 	if err != nil {
 		if err.Error() == "EOF" {
+			l.GotEof = true
 			return EofRune
 		}
 		log.Panic("ReadRune got error")
@@ -79,20 +81,5 @@ func (l *Lexer) Run() {
 	for state := l.startState; state != nil; {
 		state = state(l)
 	}
-	/***
-		for {
-			r, _, err := l.src.ReadRune()
-			if  err != nil {
-				// This happens at EOF
-				fmt.Println("error", err)
-				if err.Error() == "EOF" {
-					fmt.Println("got EOF")
-				}
-				break
-			}
-			fmt.Printf("lexer read: %v %q\n", r, r)
-			l.tokenCh <- Token{r: r, val: string(r)}
-		}
-	***/
 	close(l.tokenCh)
 }

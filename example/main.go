@@ -44,6 +44,9 @@ func main() {
 func lexState(l *lexer.Lexer) lexer.StateFn {
 	fmt.Println("start lexState")
 	for {
+		if l.GotEof {
+			break
+		}
 		r := l.Next()
 		// fmt.Printf("rune = %q\n", r)
 		if r == lexer.EofRune {
@@ -77,7 +80,11 @@ func collect(l *lexer.Lexer, testFunc charTestFn, r rune) string {
 		if testFunc(r) {
 			b.WriteRune(r)
 		} else {
-			l.UnNext()
+			// We have hit the end of the string of chars we want
+			// If we just got EOF, don't try to push it back
+			if r != lexer.EofRune {
+				l.UnNext()
+			}
 			break
 		}
 	}
