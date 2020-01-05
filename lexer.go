@@ -26,6 +26,7 @@ type Lexer struct {
 	src        *bufio.Reader
 	startState StateFn
 	GotEof     bool
+	tokNames   []string
 }
 
 const EofRune = -1
@@ -43,12 +44,13 @@ func (t Token) String() string {
 	return fmt.Sprintf("<%d, %q>", t.Type, t.Val)
 }
 
-func NewLexer(ch chan Token, src *bufio.Reader, start StateFn) *Lexer {
+func NewLexer(ch chan Token, src *bufio.Reader, start StateFn, names []string) *Lexer {
 	l := &Lexer{
 		tokenCh:    ch,
 		src:        src,
 		startState: start,
 		GotEof:     false,
+		tokNames:   names,
 	}
 	return l
 }
@@ -70,6 +72,12 @@ func (l *Lexer) UnNext() {
 	if err != nil {
 		log.Panic("UnreadRune got error")
 	}
+}
+
+func (l *Lexer) Peek() rune {
+	r := l.Next()
+	l.UnNext()
+	return r
 }
 
 func (l *Lexer) Emit(t Token) {
