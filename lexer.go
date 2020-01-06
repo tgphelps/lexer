@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"fmt"
 	"log"
+	"strings"
 )
 
 type TokenType int
@@ -18,6 +19,8 @@ type Token struct {
 	Type TokenType
 	Val  string
 }
+
+type charTestFn func(rune) bool
 
 type StateFn func(*Lexer) StateFn
 
@@ -91,3 +94,22 @@ func (l *Lexer) Run() {
 	}
 	close(l.tokenCh)
 }
+
+func (l *Lexer) AcceptRun(testFunc charTestFn) string {
+    var b strings.Builder
+    for {
+        r := l.Next()
+        if testFunc(r) {
+            b.WriteRune(r)
+        } else {
+            // We have hit the end of the string of chars we want
+            // If we just got EOF, don't try to push it back
+            if r != EofRune {
+                l.UnNext()
+            }
+            break
+        }
+    }
+    return b.String()
+}
+

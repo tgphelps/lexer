@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"lexer"
 	"os"
-	"strings"
 	"time"
 	"unicode"
 )
@@ -59,13 +58,13 @@ func lexState(l *lexer.Lexer) lexer.StateFn {
 			var t lexer.Token
 			l.UnNext()
 			if unicode.IsLetter(r) {
-				s := collect(l, unicode.IsLetter)
+				s := l.AcceptRun(unicode.IsLetter)
 				t = lexer.Token{Type: TokAlphas, Val: s}
 			} else if unicode.IsNumber(r) {
-				s := collect(l, unicode.IsNumber)
+				s := l.AcceptRun(unicode.IsNumber)
 				t = lexer.Token{Type: TokDigits, Val: s}
 			} else if unicode.IsSpace(r) {
-				s := collect(l, unicode.IsSpace)
+				s := l.AcceptRun(unicode.IsSpace)
 				t = lexer.Token{Type: TokWhiteSpace, Val: s}
 			} else {
 				// re-fetch the character
@@ -76,25 +75,6 @@ func lexState(l *lexer.Lexer) lexer.StateFn {
 		}
 	}
 	return nil
-}
-
-func collect(l *lexer.Lexer, testFunc charTestFn) string {
-	var b strings.Builder
-	// b.WriteRune(r)
-	for {
-		r := l.Next()
-		if testFunc(r) {
-			b.WriteRune(r)
-		} else {
-			// We have hit the end of the string of chars we want
-			// If we just got EOF, don't try to push it back
-			if r != lexer.EofRune {
-				l.UnNext()
-			}
-			break
-		}
-	}
-	return b.String()
 }
 
 func delay(d time.Duration) {
